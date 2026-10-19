@@ -4,6 +4,7 @@ body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f1f5f
 /* ---------- Login ---------- */
 .login-body { background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 .login-card { background: #fff; width: 100%; max-width: 600px; padding: 50px; border-top: 6px solid #1e3a8a; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.logo-login { display: block; width: 220px; max-width: 60%; height: auto; margin: 0 auto 24px; }
 .login-card h1 { text-align: center; color: #1e3a8a; margin: 0 0 20px; }
 .curso { text-align: center; color: #475569; font-size: .95rem; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
 .login-card label { display: block; margin: 20px 0 8px; font-weight: 600; }
@@ -15,6 +16,8 @@ body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f1f5f
 
 /* ---------- Panel ---------- */
 .topbar { background: #0f172a; color: #fff; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
+.marca { display: flex; align-items: center; gap: 14px; }
+.logo-top { width: 42px; height: 42px; padding: 5px; background: #fff; border-radius: 10px; }
 .topbar h1 { margin: 0; font-size: 1.3rem; }
 .topbar small { font-weight: 400; opacity: .6; }
 .sesion { font-size: .9rem; }

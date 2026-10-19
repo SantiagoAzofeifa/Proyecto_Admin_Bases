@@ -18,11 +18,15 @@ $opciones = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Panel DBA - Gestor de Prácticas</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
     <header class="topbar">
-        <h1>Panel DBA - Gestor de Prácticas <small>v<?= e(APP_VERSION) ?></small></h1>
+        <div class="marca">
+            <img src="img/favicon.png" alt="NovaCloud" class="logo-top">
+            <h1>Panel DBA - Gestor de Prácticas <small>v<?= e(APP_VERSION) ?></small></h1>
+        </div>
         <div class="sesion">
             Usuario: <strong><?= e(usuario_actual()) ?></strong>
             <a href="logout.php" class="btn-salir">Cerrar Sesión</a>
