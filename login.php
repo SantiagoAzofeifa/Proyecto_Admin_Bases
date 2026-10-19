@@ -29,10 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Acceso al Sistema</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body class="login-body">
     <main class="login-card">
+        <img src="img/novacloud.png" alt="NovaCloud" class="logo-login">
         <h1>Acceso al Sistema</h1>
         <p class="curso">
             <strong>CURSO:</strong> <?= e(CURSO) ?><br>
