@@ -17,7 +17,7 @@ proyecto/
 ## Usuario inicial
 
 - Usuario: `estudiante`
-- Clave: `Cambiar123` (cámbiala)
+- Clave: `Cambiar123`
 
 ## Generar la clave encriptada de un usuario nuevo
 
