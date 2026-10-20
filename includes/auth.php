@@ -1,9 +1,13 @@
 <?php
-// Funciones de autenticación y sesión compartidas por todas las páginas.
+require_once __DIR__ . '/../config.php';
 
 const APP_VERSION = '1.0';
+const APP_NOMBRE  = 'Consola DBA';
 const CURSO       = 'Administración de Bases de Datos';
 const PROFESOR    = 'Manuel Espinoza G.';
+
+// Segundos de inactividad antes de cerrar la sesión automáticamente.
+const SESION_INACTIVIDAD = 1800; // 30 minutos
 
 function iniciar_sesion(): void
 {
@@ -19,20 +23,30 @@ function iniciar_sesion(): void
 
 function validar_credenciales(string $usuario, string $clave): bool
 {
-    $usuarios = require __DIR__ . '/../config/usuarios.php';
-    $hash = $usuarios[$usuario] ?? null;
+    $c = cargar_config();
 
-    // Si el usuario no existe se verifica contra un hash falso para no revelar tiempos distintos.
-    if ($hash === null) {
-        password_verify($clave, '$2y$10$usesomesillystringforsalt$');
-        return false;
-    }
-    return password_verify($clave, $hash);
+    // Se ejecutan SIEMPRE las dos comprobaciones: así el tiempo de respuesta
+    // no revela si el usuario existe.
+    $usuario_ok = hash_equals((string) $c['ADMIN_USER'], $usuario);
+    $clave_ok   = password_verify($clave, (string) $c['ADMIN_HASH']);
+
+    return $usuario_ok && $clave_ok;
 }
 
 function usuario_actual(): ?string
 {
     iniciar_sesion();
+
+    // Cierre por inactividad.
+    if (isset($_SESSION['usuario'], $_SESSION['ultimo_acceso'])
+        && (time() - $_SESSION['ultimo_acceso']) > SESION_INACTIVIDAD) {
+        cerrar_sesion();
+        iniciar_sesion();
+        return null;
+    }
+    if (isset($_SESSION['usuario'])) {
+        $_SESSION['ultimo_acceso'] = time();
+    }
     return $_SESSION['usuario'] ?? null;
 }
 
@@ -53,6 +67,22 @@ function cerrar_sesion(): void
         setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
     session_destroy();
+}
+
+// Token CSRF para el formulario de login.
+function csrf_token(): string
+{
+    iniciar_sesion();
+    if (empty($_SESSION['csrf'])) {
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf'];
+}
+
+function csrf_valido(?string $token): bool
+{
+    iniciar_sesion();
+    return is_string($token) && !empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], $token);
 }
 
 function e(string $s): string
