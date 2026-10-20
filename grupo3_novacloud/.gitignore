@@ -1,0 +1,6 @@
+dba.conf
+*.cnf
+*.sql.gz
+tablas_viejas.sql
+respaldos/
+dba_logs/
