@@ -14,13 +14,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario = trim($_POST['usuario'] ?? '');
     $clave   = $_POST['clave'] ?? '';
 
-    if (validar_credenciales($usuario, $clave)) {
-        session_regenerate_id(true);
+    if (!csrf_valido($_POST['csrf'] ?? null)) {
+        $error = 'La sesión del formulario expiró. Intente de nuevo.';
+    } elseif (validar_credenciales($usuario, $clave)) {
+        session_regenerate_id(true);          
         $_SESSION['usuario'] = $usuario;
-        header('Location: index.php');   // OK -> menú
+        $_SESSION['ultimo_acceso'] = time();
+        unset($_SESSION['csrf']);
+        header('Location: index.php');        
         exit;
+    } else {
+        usleep(400000);                       
+        $error = 'Usuario o contraseña incorrectos.';
     }
-    $error = 'Usuario o contraseña incorrectos.';
 }
 ?>
 <!DOCTYPE html>
@@ -46,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="post" action="login.php" autocomplete="off">
+            <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
             <label for="usuario">Usuario:</label>
             <input type="text" id="usuario" name="usuario" required autofocus>
 
