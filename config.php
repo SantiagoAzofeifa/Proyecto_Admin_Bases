@@ -57,7 +57,8 @@ function cargar_config(): array
         exit('Error de configuración: no se puede leer el archivo de configuración.');
     }
 
-    $cfg = parse_ini_file($archivo, false, INI_SCANNER_RAW);
+    $lineas = array_filter(file($archivo, FILE_IGNORE_NEW_LINES), fn($l) => !preg_match('/^\s*#/', $l));
+    $cfg = parse_ini_string(implode("\n", $lineas), false, INI_SCANNER_NORMAL);
     if ($cfg === false) {
         http_response_code(500);
         exit('Error de configuración: archivo de configuración inválido.');
