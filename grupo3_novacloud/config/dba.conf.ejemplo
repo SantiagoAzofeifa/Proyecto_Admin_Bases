@@ -1,0 +1,33 @@
+# =====================================================================
+# Configuración CENTRAL de la Consola DBA (versión 1.0) - Grupo 3 NovaCloud
+#
+# Ubicación real:  ~/dba_config/dba.conf   (FUERA de public_html)
+# Permisos:        chmod 700 ~/dba_config   y   chmod 600 ~/dba_config/dba.conf
+#
+# Formato: CLAVE='valor' (comillas simples, sin espacios alrededor del "=").
+# Así lo leen igual PHP (parse_ini_file) y Bash (source), sin duplicar datos.
+# NO subir el dba.conf real a GitHub; solo este archivo de ejemplo.
+# =====================================================================
+
+# --- Motor y conexión (cambia por cuenta de cada integrante) ---------
+DB_MOTOR='MariaDB'
+DB_HOST='localhost'
+DB_PORT='3306'
+DB_NAME='CAMBIAR_nombre_de_la_bd'
+DB_USER='CAMBIAR_usuario_de_la_bd'
+DB_PASS='CAMBIAR_contrasena_de_la_bd'
+
+# --- Autenticación de la Consola (NO es la clave de la BD) -----------
+# Generar el hash con:  php -r "echo password_hash('TU_CLAVE', PASSWORD_DEFAULT), PHP_EOL;"
+ADMIN_USER='admin'
+ADMIN_HASH='PEGAR_AQUI_EL_HASH_GENERADO'
+
+# --- Aplicación ------------------------------------------------------
+APP_VERSION='1.0'
+APP_NOMBRE='Consola DBA - NovaCloud'
+
+# --- Rutas (relativas al HOME de la cuenta; PHP y Bash anteponen $HOME) ---
+RUTA_SCRIPTS='dba_scripts'
+RUTA_RESPALDOS='respaldos'
+RUTA_LOGS='dba_logs'
+ARCHIVO_LOG_RESPALDOS='dba_logs/respaldos.log'
