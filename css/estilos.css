@@ -242,3 +242,21 @@ body.con-pie .contenedor { flex: 1; width: 100%; }
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
 }
+
+/* ---------- Respaldos (Proyecto 02) ---------- */
+.barra-accion { margin: 22px 0; }
+.btn-accion { padding: 12px 22px; font: inherit; font-weight: 700; color: #fff; background: var(--tinta); border: 0; border-radius: 8px; cursor: pointer; transition: background .15s; }
+.btn-accion:hover { background: var(--cian-osc); }
+.resumen { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 28px; }
+.dato { padding: 12px 18px; font-size: .88rem; color: var(--apagado); background: var(--papel); border: 1px solid var(--linea); border-top: 3px solid var(--cian); border-radius: var(--radio); }
+.dato strong { display: block; font-size: 1.1rem; color: var(--tinta); }
+.seccion-titulo { margin: 8px 0 12px; font-size: 1.1rem; color: var(--tinta); }
+.tabla-wrap { margin-bottom: 32px; overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; background: var(--papel); border: 1px solid var(--linea); }
+.tabla th, .tabla td { padding: 11px 14px; text-align: left; font-size: .92rem; border-bottom: 1px solid var(--linea); }
+.tabla th { color: var(--tinta); background: var(--cian-suave); }
+.est-ok { font-weight: 700; color: #1a7f4b; }
+.est-error, .est-revisar { font-weight: 700; color: var(--error); }
+.aviso { margin: 18px 0 0; padding: 12px 14px; border-radius: 6px; font-size: .92rem; }
+.aviso-ok { color: #14532d; background: #e6f6ec; border-left: 4px solid #1a7f4b; }
+.aviso-error { color: var(--error); background: var(--error-fondo); border-left: 4px solid var(--error); }
