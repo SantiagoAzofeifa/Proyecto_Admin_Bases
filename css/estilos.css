@@ -260,3 +260,31 @@ body.con-pie .contenedor { flex: 1; width: 100%; }
 .aviso { margin: 18px 0 0; padding: 12px 14px; border-radius: 6px; font-size: .92rem; }
 .aviso-ok { color: #14532d; background: #e6f6ec; border-left: 4px solid #1a7f4b; }
 .aviso-error { color: var(--error); background: var(--error-fondo); border-left: 4px solid var(--error); }
+
+/* ---------- Monitor (Proyecto 01) ---------- */
+.monitor-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.btn-secundario { padding: 11px 20px; font-weight: 600; color: var(--tinta); text-decoration: none; border: 1px solid #9fb3c6; border-radius: 8px; transition: background .15s, color .15s; }
+.btn-secundario:hover { color: #fff; background: var(--tinta); border-color: var(--tinta); }
+.dato-grande { min-width: 180px; }
+.dato-grande strong { font-size: 1.6rem; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabla tfoot th { background: #f4f8fb; border-top: 2px solid var(--linea); }
+.fila-top td { background: #f3fbfd; }
+.etiqueta { margin-left: 6px; padding: 1px 8px; font-size: .72rem; font-weight: 700; color: var(--cian-osc); background: var(--cian-suave); border-radius: 999px; white-space: nowrap; }
+.top-tablas { margin: 0 0 28px; padding: 16px 20px; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); }
+.top-fila { display: grid; grid-template-columns: minmax(110px, 180px) 1fr auto; align-items: center; gap: 14px; padding: 7px 0; font-size: .92rem; }
+.top-nombre { font-weight: 600; color: var(--tinta); overflow-wrap: anywhere; }
+.top-valor { color: var(--apagado); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barra { display: block; height: 12px; background: var(--fondo); border-radius: 999px; overflow: hidden; }
+.barra span { display: block; height: 100%; min-width: 2px; background: var(--cian); border-radius: 999px; }
+.total-bd { margin: -14px 0 24px; font-size: 1.05rem; color: var(--tinta); }
+.notas { margin: 0 0 24px; padding: 14px 18px; font-size: .88rem; color: var(--apagado); background: var(--cian-suave); border-radius: var(--radio); }
+.notas p { margin: 4px 0; }
+.consultas { margin-bottom: 24px; padding: 12px 18px; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); }
+.consultas summary { font-weight: 700; color: var(--tinta); cursor: pointer; }
+.consultas h4 { margin: 14px 0 4px; font-size: .85rem; color: var(--apagado); }
+.consultas pre { margin: 0; padding: 10px 12px; overflow-x: auto; font-size: .82rem; color: #e6eef6; background: var(--tinta); border-radius: 6px; }
+@media (max-width: 640px) {
+    .top-fila { grid-template-columns: 1fr auto; }
+    .top-fila .barra { grid-column: 1 / -1; grid-row: 2; }
+}
