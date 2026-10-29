@@ -21,8 +21,8 @@ mkdir -p "$HOME/public_html/$APP_DIR"
 chmod 755 "$HOME/public_html/$APP_DIR"
 
 # Carpetas privadas (fuera de public_html)
-mkdir -p "$HOME/dba_config" "$HOME/dba_scripts" "$HOME/respaldos" "$HOME/dba_logs"
-chmod 700 "$HOME/dba_config" "$HOME/dba_scripts" "$HOME/respaldos" "$HOME/dba_logs"
+mkdir -p "$HOME/dba_config" "$HOME/dba_scripts" "$HOME/respaldos" "$HOME/dba_logs" "$HOME/dba_planes"
+chmod 700 "$HOME/dba_config" "$HOME/dba_scripts" "$HOME/respaldos" "$HOME/dba_logs" "$HOME/dba_planes"
 
 # Configuración: se crea desde el ejemplo solo si todavía no existe
 if [ ! -f "$HOME/dba_config/dba.conf" ]; then
@@ -48,5 +48,5 @@ chmod 600 "$HOME/dba_logs/respaldos.log"
 echo
 echo "Estructura final:"
 ls -ld "$HOME/public_html/$APP_DIR" "$HOME/dba_config" "$HOME/dba_scripts" \
-       "$HOME/respaldos" "$HOME/dba_logs"
+       "$HOME/respaldos" "$HOME/dba_logs" "$HOME/dba_planes"
 ls -l "$HOME/dba_config"

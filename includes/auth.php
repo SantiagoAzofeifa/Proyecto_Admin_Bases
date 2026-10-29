@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-const APP_VERSION = '1.0';
+const APP_VERSION = '2.0';
 const APP_NOMBRE  = 'Consola DBA';
 const CURSO       = 'Administración de Bases de Datos';
 const PROFESOR    = 'Manuel Espinoza G.';

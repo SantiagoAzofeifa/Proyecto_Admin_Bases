@@ -3,12 +3,12 @@ function menu_items(): array
 {
     return [
         'inicio'    => ['Inicio', 'index.php'],
-        'monitor'   => ['Proyecto 01 · Monitor', 'monitor.php'],
-        'respaldos' => ['Proyecto 02 · Respaldos', 'respaldos.php'],
-        'p3' => ['Proyecto 03', 'proximamente.php?p=3'],
-        'p4' => ['Proyecto 04', 'proximamente.php?p=4'],
-        'p5' => ['Proyecto 05', 'proximamente.php?p=5'],
-        'p6' => ['Proyecto 06', 'proximamente.php?p=6'],
+        'monitor'     => ['Módulo 01 · Monitor', 'monitor.php'],
+        'respaldos'   => ['Módulo 02 · Respaldos', 'respaldos.php'],
+        'diagnostico' => ['Módulo 03 · Diagnóstico', 'diagnostico.php'],
+        'p4' => ['Módulo 04', 'proximamente.php?p=4'],
+        'p5' => ['Módulo 05', 'proximamente.php?p=5'],
+        'p6' => ['Módulo 06', 'proximamente.php?p=6'],
     ];
 }
 

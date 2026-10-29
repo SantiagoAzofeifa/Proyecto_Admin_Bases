@@ -20,6 +20,14 @@ function diag_catalogo(): array
                          . "MIN(id_pedido) AS primer_id, MAX(id_pedido) AS ultimo_id\n"
                          . "FROM diag_pedidos\n"
                          . "WHERE estado = 'CANCELADO' AND fecha_pedido >= '2026-01-01'",
+            // Mejora ensayada (db/diag_mejora_q01.sql). Solo se muestra; la
+            // web no crea ni borra índices.
+            'mejora'    => [
+                'descripcion' => 'Índice compuesto (estado, fecha_pedido): la igualdad por estado y el '
+                               . 'rango de fecha se resuelven en el índice y las filas salen ya '
+                               . 'ordenadas por fecha, sin recorrer la tabla ni ordenar aparte.',
+                'sql'         => 'CREATE INDEX idx_diag_estado_fecha ON diag_pedidos (estado, fecha_pedido);',
+            ],
         ],
         'Q02' => [
             'titulo'    => 'Q02 - Mayores pedidos de clientes de Heredia',

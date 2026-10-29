@@ -288,3 +288,28 @@ body.con-pie .contenedor { flex: 1; width: 100%; }
     .top-fila { grid-template-columns: 1fr auto; }
     .top-fila .barra { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ---------- Diagnóstico (Módulo 03) ---------- */
+.casos { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0; }
+.casos a { padding: 9px 16px; font-size: .92rem; font-weight: 600; color: var(--tinta); text-decoration: none; background: var(--papel); border: 1px solid #9fb3c6; border-radius: 999px; transition: background .15s, color .15s; }
+.casos a:hover { border-color: var(--tinta); }
+.casos a.activo { color: #fff; background: var(--tinta); border-color: var(--tinta); }
+.bloque { margin: 0 0 24px; padding: 18px 20px; background: var(--papel); border: 1px solid var(--linea); border-left: 4px solid var(--cian); border-radius: var(--radio); }
+.bloque h3 { margin: 0 0 8px; font-size: 1.1rem; color: var(--tinta); }
+.bloque p { margin: 6px 0; font-size: .94rem; }
+.etiqueta-sql { margin: 12px 0 4px; font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--apagado); }
+pre.sql { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: .85rem; line-height: 1.45; color: #e6eef6; background: var(--tinta); border-radius: 6px; }
+.tabla-plan th, .tabla-plan td { font-size: .84rem; white-space: nowrap; }
+.tabla-plan td { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+.tabla-plan td.nulo { color: #9aa9b8; }
+.vacio { color: var(--apagado); font-size: .9rem; }
+.interpretacion { margin: 0 0 12px; padding-left: 20px; }
+.interpretacion li { margin: 0 0 8px; font-size: .94rem; }
+.nota-plan { margin: 0 0 28px; padding: 10px 14px; font-size: .86rem; color: var(--apagado); background: var(--cian-suave); border-radius: var(--radio); }
+.ref-info { margin: 0 0 14px; font-size: .94rem; }
+.comparacion { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.comparacion h4 { padding-top: 6px; }
+.comparacion > div { min-width: 0; }
+.comparacion h4, h4.sub { margin: 6px 0 8px; font-size: 1rem; color: var(--tinta); }
+.comparacion .tabla-wrap { margin-bottom: 14px; }
+button.btn-secundario { font: inherit; font-weight: 600; background: transparent; cursor: pointer; }
