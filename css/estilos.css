@@ -313,3 +313,5 @@ pre.sql { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: .85rem; li
 .comparacion h4, h4.sub { margin: 6px 0 8px; font-size: 1rem; color: var(--tinta); }
 .comparacion .tabla-wrap { margin-bottom: 14px; }
 button.btn-secundario { font: inherit; font-weight: 600; background: transparent; cursor: pointer; }
+.contenedor > p.est-ok { color: #1a7f4b; }
+.contenedor > p.est-error { color: var(--error); }
