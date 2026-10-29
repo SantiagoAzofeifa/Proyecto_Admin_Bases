@@ -5,18 +5,18 @@ require __DIR__ . '/includes/layout.php';
 requerir_login();
 
 $modulos = [
-    ['Proyecto 01 · Monitor de Base de Datos', 'Tamaño de la base, tablas, registros y tablas que más espacio consumen.', 'Abrir Monitor', 'monitor.php', true],
-    ['Proyecto 02 · Respaldos', 'Generar respaldos comprimidos, listarlos y consultar la bitácora de ejecución.', 'Abrir Respaldos', 'respaldos.php', true],
-    ['Proyecto 03', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=3', false],
-    ['Proyecto 04', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=4', false],
-    ['Proyecto 05', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=5', false],
-    ['Proyecto 06', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=6', false],
+    ['Módulo 01 · Monitor de Base de Datos', 'Tamaño de la base, tablas, registros y tablas que más espacio consumen.', 'Abrir Monitor', 'monitor.php', true],
+    ['Módulo 02 · Respaldos', 'Generar respaldos comprimidos, listarlos y consultar la bitácora de ejecución.', 'Abrir Respaldos', 'respaldos.php', true],
+    ['Módulo 03 · Diagnóstico de consultas', 'Planes de ejecución (EXPLAIN) de Q01 y Q02, interpretación y comparación antes/después de una mejora.', 'Abrir Diagnóstico', 'diagnostico.php', true],
+    ['Módulo 04', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=4', false],
+    ['Módulo 05', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=5', false],
+    ['Módulo 06', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=6', false],
 ];
 
 render_header('Inicio', 'inicio');
 ?>
 <h2>Bienvenido a la Consola DBA</h2>
-<p>Seleccione un módulo de administración. Los módulos 03 a 06 se habilitarán en las próximas semanas.</p>
+<p>Seleccione un módulo de administración. Los módulos 04 a 06 se habilitarán en las próximas semanas.</p>
 
 <div class="grid">
 <?php foreach ($modulos as [$titulo, $desc, $boton, $enlace, $habilitado]): ?>

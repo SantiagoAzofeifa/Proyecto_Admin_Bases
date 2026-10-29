@@ -23,11 +23,13 @@ ADMIN_USER='admin'
 ADMIN_HASH='PEGAR_AQUI_EL_HASH_GENERADO'
 
 # --- Aplicación ------------------------------------------------------
-APP_VERSION='1.0'
+APP_VERSION='2.0'
 APP_NOMBRE='Consola DBA - NovaCloud'
 
 # --- Rutas (relativas al HOME de la cuenta; PHP y Bash anteponen $HOME) ---
 RUTA_SCRIPTS='dba_scripts'
 RUTA_RESPALDOS='respaldos'
 RUTA_LOGS='dba_logs'
+# Planes de referencia del Módulo 03 (antes de la mejora)
+RUTA_PLANES='dba_planes'
 ARCHIVO_LOG_RESPALDOS='dba_logs/respaldos.log'

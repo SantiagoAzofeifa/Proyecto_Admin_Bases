@@ -69,11 +69,12 @@ function cargar_config(): array
         'DB_MOTOR'              => 'MariaDB',
         'DB_HOST'               => 'localhost',
         'DB_PORT'               => '3306',
-        'APP_VERSION'           => '1.0',
+        'APP_VERSION'           => '2.0',
         'APP_NOMBRE'            => 'Consola DBA',
         'RUTA_SCRIPTS'          => 'dba_scripts',
         'RUTA_RESPALDOS'        => 'respaldos',
         'RUTA_LOGS'             => 'dba_logs',
+        'RUTA_PLANES'           => 'dba_planes',
         'ARCHIVO_LOG_RESPALDOS' => 'dba_logs/respaldos.log',
     ];
 
@@ -83,6 +84,7 @@ function cargar_config(): array
     $cfg['DIR_SCRIPTS']           = $home . '/' . $cfg['RUTA_SCRIPTS'];
     $cfg['DIR_RESPALDOS']         = $home . '/' . $cfg['RUTA_RESPALDOS'];
     $cfg['DIR_LOGS']              = $home . '/' . $cfg['RUTA_LOGS'];
+    $cfg['DIR_PLANES']            = $home . '/' . $cfg['RUTA_PLANES'];
     $cfg['ARCHIVO_LOG_RESPALDOS'] = $home . '/' . $cfg['ARCHIVO_LOG_RESPALDOS'];
 
     // Claves obligatorias
