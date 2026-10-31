@@ -4,7 +4,7 @@ require __DIR__ . '/includes/layout.php';
 requerir_login();
 
 // Solo se aceptan valores 4 a 6; cualquier otra cosa cae en 4.
-$p = filter_input(INPUT_GET, 'p', FILTER_VALIDATE_INT, ['options' => ['min_range' => 4, 'max_range' => 6]]) ?: 4;
+$p = filter_input(INPUT_GET, 'p', FILTER_VALIDATE_INT, ['options' => ['min_range' => 5, 'max_range' => 6]]) ?: 5;
 
 render_header("Módulo 0$p", "p$p");
 ?>

@@ -6,7 +6,7 @@ function menu_items(): array
         'monitor'     => ['Módulo 01 · Monitor', 'monitor.php'],
         'respaldos'   => ['Módulo 02 · Respaldos', 'respaldos.php'],
         'diagnostico' => ['Módulo 03 · Diagnóstico', 'diagnostico.php'],
-        'p4' => ['Módulo 04', 'proximamente.php?p=4'],
+        'mantenimiento' => ['Módulo 04    Mantenimiento', 'mantenimiento.php'],
         'p5' => ['Módulo 05', 'proximamente.php?p=5'],
         'p6' => ['Módulo 06', 'proximamente.php?p=6'],
     ];
