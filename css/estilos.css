@@ -315,3 +315,11 @@ pre.sql { margin: 0; padding: 12px 14px; overflow-x: auto; font-size: .85rem; li
 button.btn-secundario { font: inherit; font-weight: 600; background: transparent; cursor: pointer; }
 .contenedor > p.est-ok { color: #1a7f4b; }
 .contenedor > p.est-error { color: var(--error); }
+
+/* ---------- Mantenimiento (Módulo 04) ---------- */
+.confirmar { border-left: 4px solid var(--cian); }
+.confirmar form { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+.no-disp { color: var(--apagado); font-style: italic; }
+.btn-tabla { display: inline-block; padding: 6px 12px; font-size: .84rem; font-weight: 600; color: var(--tinta); text-decoration: none; border: 1px solid #9fb3c6; border-radius: 6px; white-space: nowrap; }
+.btn-tabla:hover { color: #fff; background: var(--tinta); border-color: var(--tinta); }
+.tabla tbody th { white-space: nowrap; }
