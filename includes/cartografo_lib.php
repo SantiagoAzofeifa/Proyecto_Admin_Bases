@@ -9,19 +9,25 @@
 
 const CARTO_MAX_TABLAS = 20;    // tope de cajas en el mapa SVG
 
+// Conteo de huérfanos con límites, bitácora y validación (parte de Gabriel).
+require_once __DIR__ . '/cartografo_control.php';
+
 /**
  * Reúne todo lo que muestra la pantalla.
  *
- * @param string|null $foco tabla a resaltar (ya validada con cat_tabla_existe), o null para todas
- * @return array{tablas:array,relaciones:array,descartadas:array,total_huerfanos:int}
+ * @param string|null $foco tabla a resaltar (ya validada con carto_validar_tabla), o null para todas
+ * @param array|null $limites reemplaza a carto_limites() (se usa en las pruebas por terminal)
+ * @return array{tablas:array,relaciones:array,descartadas:array,total_huerfanos:int,omitidas:int,limites:array}
  */
-function carto_analizar(PDO $pdo, ?string $foco = null): array
+function carto_analizar(PDO $pdo, ?string $foco = null, ?array $limites = null): array
 {
+    $limites  = $limites ?? carto_limites(cargar_config());
     $tablas   = cat_tablas($pdo);
     $columnas = cat_columnas($pdo);
     $pks      = cat_llaves_primarias($pdo);
     $decl     = cat_relaciones_declaradas($pdo);
     $det      = rel_inferir_detalle($columnas, $pks, $decl);
+    $filasEst = carto_filas_estimadas($pdo);
 
     // Declaradas (FOREIGN KEY) + inferidas, siempre entre tablas propias.
     $todas = [];
@@ -34,6 +40,9 @@ function carto_analizar(PDO $pdo, ?string $foco = null): array
 
     $relaciones = [];
     $totalHuerfanos = 0;
+    $contadas = 0;
+    $omitidas = 0;
+    $t0 = microtime(true);
     foreach ($todas as $r) {
         if (!in_array($r['hijo'], $tablas, true) || !in_array($r['padre'], $tablas, true)) {
             continue;   // vistas o copias sbx_ del laboratorio
@@ -41,20 +50,24 @@ function carto_analizar(PDO $pdo, ?string $foco = null): array
         if ($foco !== null && $r['hijo'] !== $foco && $r['padre'] !== $foco) {
             continue;
         }
-        // Conteo de huérfanos de la relación (la relación salió del catálogo, no del usuario).
-        $r['huerfanos'] = null;
-        $r['muestra']   = [];
-        try {
-            $r['huerfanos'] = cat_contar_huerfanos($pdo, $r);
-            if ($r['huerfanos'] > 0) {
-                $r['muestra'] = $pdo->query(
-                    cat_sql_muestra_huerfanos($r['hijo'], $r['col_hijo'], $r['padre'], $r['col_padre'], 5)
-                )->fetchAll(PDO::FETCH_COLUMN);
-                $totalHuerfanos += $r['huerfanos'];
-            }
-        } catch (PDOException $ex) {
-            $r['huerfanos'] = null;   // se muestra como «No disponible»
+
+        // Conteo de huérfanos (la relación salió del catálogo, no del usuario), con límites.
+        if ($contadas >= $limites['relaciones']) {
+            $res = carto_sin_dato('Conteo omitido: se alcanzó el límite de ' . $limites['relaciones'] . ' relaciones por análisis.');
+        } elseif ((microtime(true) - $t0) > $limites['total']) {
+            $res = carto_sin_dato('Conteo omitido: se agotó el tiempo total del análisis (' . $limites['total'] . ' s).');
+        } else {
+            $contadas++;
+            $res = carto_huerfanos_de($pdo, $r, $filasEst, $limites['filas'], $limites['por_consulta']);
         }
+        $r['huerfanos'] = $res['huerfanos'];
+        $r['muestra']   = $res['muestra'];
+        $r['estado']    = $res['estado'];
+        if ($res['nota'] !== '') {
+            $r['motivo'] .= ' ' . $res['nota'];
+            $omitidas++;
+        }
+        $totalHuerfanos += (int) $res['huerfanos'];
         $relaciones[] = $r;
     }
 
@@ -63,6 +76,8 @@ function carto_analizar(PDO $pdo, ?string $foco = null): array
         'relaciones'      => $relaciones,
         'descartadas'     => $det['descartadas'],
         'total_huerfanos' => $totalHuerfanos,
+        'omitidas'        => $omitidas,
+        'limites'         => $limites,
     ];
 }
 

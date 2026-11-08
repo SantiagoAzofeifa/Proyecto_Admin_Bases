@@ -10,43 +10,55 @@ date_default_timezone_set('America/Costa_Rica');
 $cfg = cargar_config();
 
 // Módulo de solo lectura: no hay POST. La única entrada es ?tabla=, que se
-// acepta solo si coincide con una tabla propia de la base (cat_tablas()).
-$error = null;
-$aviso = null;
-$foco  = null;
+// acepta solo si coincide EXACTAMENTE con una tabla propia de la base.
+// Cada análisis (correcto, con advertencia o con error) queda en la bitácora
+// privada ~/dba_logs/cartografo.log (includes/cartografo_control.php).
+$error        = null;
+$aviso        = null;
+$foco         = null;
+$bitacora_ok  = true;
+$t0           = microtime(true);
+$inicio       = date('Y-m-d H:i:s P');
 try {
     $pdo = conectar_bd();
     $con = monitor_conexion($pdo);
+    $todasTablas = cat_tablas($pdo);
 
     if (isset($_GET['tabla']) && $_GET['tabla'] !== '') {
-        $pedida = is_string($_GET['tabla']) ? $_GET['tabla'] : '';
-        if (cat_tabla_existe($pdo, $pedida)) {
-            $foco = $pedida;
-        } else {
-            $aviso = 'La tabla indicada no existe o no está permitida en esta base. Se muestran todas las tablas.';
+        [$foco, $motivo] = carto_validar_tabla($todasTablas, $_GET['tabla']);
+        if ($foco === null) {
+            $aviso = 'ERROR: ' . $motivo . ' Se muestran todas las tablas.';
+            $pedida = is_string($_GET['tabla']) ? $_GET['tabla'] : '(' . gettype($_GET['tabla']) . ')';
+            $bitacora_ok = cartografo_registrar($cfg, [
+                'inicio' => $inicio, 'base' => $con['base'], 'accion' => 'Solicitud rechazada',
+                'tabla'  => '(no válida) ' . $pedida, 'ok' => false, 'mensaje' => $motivo,
+            ]) && $bitacora_ok;
         }
     }
 
-    $todasTablas = cat_tablas($pdo);
-    $mapa        = carto_analizar($pdo, null);          // el mapa siempre muestra el conjunto completo
-    $relVista    = $foco === null ? $mapa['relaciones']
-                 : array_values(array_filter($mapa['relaciones'], fn($r) => $r['hijo'] === $foco || $r['padre'] === $foco));
+    $mapa     = carto_analizar($pdo, null);          // el mapa siempre muestra el conjunto completo
+    $relVista = $foco === null ? $mapa['relaciones']
+              : array_values(array_filter($mapa['relaciones'], fn($r) => $r['hijo'] === $foco || $r['padre'] === $foco));
     [$svg, $fuera] = carto_svg($todasTablas, $mapa['relaciones'], $foco);
 
-    // Bitácora (parte de Gabriel): se registra solo si su función ya existe en el repositorio.
-    if (function_exists('cartografo_registrar')) {
-        cartografo_registrar($cfg, [
-            'inicio'     => date('Y-m-d H:i:s P'),
-            'base'       => $con['base'],
-            'tabla'      => $foco ?? '(todas)',
-            'relaciones' => count($mapa['relaciones']),
-            'huerfanos'  => $mapa['total_huerfanos'],
-            'ok'         => true,
-        ]);
-    }
+    $bitacora_ok = cartografo_registrar($cfg, [
+        'inicio'     => $inicio,
+        'base'       => $con['base'],
+        'tabla'      => $foco ?? '(todas)',
+        'relaciones' => count($mapa['relaciones']),
+        'huerfanos'  => $mapa['total_huerfanos'],
+        'omitidas'   => $mapa['omitidas'],
+        'duracion'   => microtime(true) - $t0,
+        'ok'         => true,
+    ]) && $bitacora_ok;
 } catch (PDOException $ex) {
     // El mensaje de PDO no incluye la contraseña (solo usuario y host).
     $error = 'No se pudo consultar la base de datos: ' . $ex->getMessage();
+    $bitacora_ok = cartografo_registrar($cfg, [
+        'inicio' => $inicio, 'base' => (string) $cfg['DB_NAME'], 'ok' => false,
+        'mensaje' => 'Error de base de datos (' . ($ex->errorInfo[1] ?? '?') . '): ' . substr($ex->getMessage(), 0, 150),
+        'duracion' => microtime(true) - $t0,
+    ]);
 }
 
 $nd = '<span class="no-disp">No disponible</span>';
@@ -62,6 +74,12 @@ render_header('Cartógrafo de relaciones', 'cartografo');
 
 <?php if ($aviso): ?>
     <div class="aviso aviso-error"><?= e($aviso) ?></div>
+<?php endif; ?>
+<?php if (!$bitacora_ok): ?>
+    <div class="aviso aviso-error">No se pudo escribir en la bitácora (revise la carpeta de logs).</div>
+<?php endif; ?>
+<?php if ($mapa['omitidas'] > 0): ?>
+    <div class="aviso aviso-error"><?= (int) $mapa['omitidas'] ?> relación(es) quedaron sin conteo de huérfanos por los límites del módulo (detalle en la última columna).</div>
 <?php endif; ?>
 
 <div class="resumen">
@@ -109,7 +127,7 @@ render_header('Cartógrafo de relaciones', 'cartografo');
 <table class="tabla">
     <thead><tr>
         <th>Tabla hija</th><th>Columna</th><th>Tabla padre</th><th>Columna</th>
-        <th>Origen</th><th>Confianza</th><th class="num">Huérfanos</th><th>Detalle</th>
+        <th>Origen</th><th>Confianza</th><th class="num">Huérfanos</th><th>Estado</th><th>Detalle</th>
     </tr></thead>
     <tbody>
     <?php foreach ($relVista as $r): ?>
@@ -123,6 +141,7 @@ render_header('Cartógrafo de relaciones', 'cartografo');
             <td class="num <?= ($r['huerfanos'] ?? 0) > 0 ? 'est-error' : '' ?>">
                 <?= $r['huerfanos'] === null ? $nd : e(monitor_num($r['huerfanos'])) ?>
             </td>
+            <td class="<?= $r['estado'] === 'ADVERTENCIA' ? 'est-error' : ($r['estado'] === 'OK' ? 'est-ok' : '') ?>"><?= e($r['estado']) ?></td>
             <td><?= e($r['motivo']) ?>
                 <?php if ($r['muestra']): ?>
                     <br><strong>Valores sin padre (muestra):</strong> <?= e(implode(', ', array_map('strval', $r['muestra']))) ?>
@@ -146,4 +165,26 @@ render_header('Cartógrafo de relaciones', 'cartografo');
     </ul>
 </details>
 <?php endif; ?>
+
+<?php $ultimos = cartografo_bitacora($cfg, 10); ?>
+<h3 class="seccion-titulo">Bitácora (últimos 10 análisis)</h3>
+<div class="tabla-wrap">
+<table class="tabla">
+    <thead><tr><th>Fecha/hora</th><th>Tabla</th><th>Acción</th><th>Resultado</th><th>Detalle</th></tr></thead>
+    <tbody>
+    <?php if (!$ultimos): ?>
+        <tr><td colspan="5">La bitácora está vacía.</td></tr>
+    <?php endif; ?>
+    <?php foreach ($ultimos as $b): ?>
+        <tr>
+            <td><?= e($b['fecha']) ?></td>
+            <td><?= e($b['tabla']) ?></td>
+            <td><?= e($b['accion']) ?></td>
+            <td class="<?= $b['resultado'] === 'OK' ? 'est-ok' : 'est-error' ?>"><?= e($b['resultado']) ?></td>
+            <td><?= e($b['detalle']) ?></td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+</div>
 <?php render_footer();
