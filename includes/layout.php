@@ -7,8 +7,8 @@ function menu_items(): array
         'respaldos'   => ['Módulo 02 · Respaldos', 'respaldos.php'],
         'diagnostico' => ['Módulo 03 · Diagnóstico', 'diagnostico.php'],
         'mantenimiento' => ['Módulo 04    Mantenimiento', 'mantenimiento.php'],
-        'p5' => ['Módulo 05', 'proximamente.php?p=5'],
-        'p6' => ['Módulo 06', 'proximamente.php?p=6'],
+        'cartografo'  => ['Módulo 05 · Cartógrafo', 'cartografo.php'],
+        'laboratorio' => ['Módulo 06 · Laboratorio', 'laboratorio.php'],
     ];
 }
 

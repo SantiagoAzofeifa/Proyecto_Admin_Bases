@@ -323,3 +323,29 @@ button.btn-secundario { font: inherit; font-weight: 600; background: transparent
 .btn-tabla { display: inline-block; padding: 6px 12px; font-size: .84rem; font-weight: 600; color: var(--tinta); text-decoration: none; border: 1px solid #9fb3c6; border-radius: 6px; white-space: nowrap; }
 .btn-tabla:hover { color: #fff; background: var(--tinta); border-color: var(--tinta); }
 .tabla tbody th { white-space: nowrap; }
+
+/* ---------- Módulos 05 y 06 (Andy Luna) ---------- */
+.barra-filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 6px; }
+.barra-filtro label { font-weight: 600; color: var(--tinta); }
+.barra-filtro select { padding: 9px 12px; font: inherit; color: var(--texto); background: var(--papel); border: 1px solid #9fb3c6; border-radius: 8px; }
+.mapa-wrap { overflow-x: auto; padding: 10px; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); }
+.mapa-svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.mr-tabla rect { fill: var(--cian-suave); stroke: var(--tinta); stroke-width: 1.5; }
+.mr-tabla text { font-size: 13px; font-weight: 600; fill: var(--tinta); }
+.mr-tabla.mr-foco rect { fill: var(--cian); stroke-width: 3; }
+.mr-tabla.mr-foco text { fill: #fff; }
+.mr-lin { fill: none; stroke-width: 2; }
+.mr-decl { stroke: var(--tinta); }
+.mr-inf { stroke: var(--cian-osc); stroke-dasharray: 7 5; }
+.mr-huer { stroke: var(--error); stroke-width: 3; }
+.mr-punta { fill: var(--tinta); }
+.mr-punta-h { fill: var(--error); }
+.leyenda-mapa { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 10px 0 0; padding: 0; list-style: none; font-size: .88rem; color: var(--apagado); }
+.leyenda-mapa .lg { display: inline-block; width: 30px; margin-right: 6px; vertical-align: middle; border-top: 3px solid var(--tinta); }
+.leyenda-mapa .lg-inf { border-top: 3px dashed var(--cian-osc); }
+.leyenda-mapa .lg-huer { border-top: 3px solid var(--error); }
+.candidatos { display: grid; gap: 10px; margin: 14px 0; }
+.candidatos label { display: block; padding: 12px 14px; background: var(--papel); border: 1px solid var(--linea); border-radius: 8px; cursor: pointer; }
+.candidatos input { margin-right: 8px; }
+.candidatos small { display: block; margin: 2px 0 0 26px; color: var(--apagado); }
+.lab-pasos { margin: 8px 0 0; padding-left: 20px; font-size: .94rem; }
