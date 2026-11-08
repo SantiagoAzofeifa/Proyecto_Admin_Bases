@@ -8,6 +8,9 @@
 // Prefijo de las copias temporales del Módulo 06: nunca se listan como tablas propias.
 const CAT_PREFIJO_SBX = 'sbx_';
 
+// Reglas de inferencia por nombre y tipo (Santiago).
+require_once __DIR__ . '/rel_inferencia.php';
+
 /** Escapa un identificador para MariaDB (duplica el acento grave). */
 function cat_ident(string $nombre): string
 {
@@ -79,10 +82,12 @@ function cat_relaciones_declaradas(PDO $pdo): array
 }
 
 /**
- * Función PURA (se prueba sin base de datos). Infiere relaciones no declaradas:
- * una columna de una tabla cuyo nombre y tipo coinciden con la llave primaria
- * de UNA columna de otra tabla, y que no es la llave primaria de su propia tabla.
- * Es una HEURÍSTICA: solo propone, la confirmación la hace el conteo de huérfanos.
+ * Función PURA (se prueba sin base de datos). Infiere relaciones no declaradas.
+ * Las reglas viven en rel_inferencia.php: nombre igual a la llave primaria del
+ * padre o patrón (cliente_id, id_cliente), tipo compatible según COLUMN_TYPE
+ * (familia y signo) y aviso de ambigüedad. Cada relación trae además regla,
+ * confianza y motivo. Es una HEURÍSTICA: solo propone, la confirmación la hace
+ * el conteo de huérfanos.
  *
  * @param array $columnas  salida de cat_columnas()
  * @param array $pks       salida de cat_llaves_primarias()
@@ -90,40 +95,7 @@ function cat_relaciones_declaradas(PDO $pdo): array
  */
 function cat_inferir(array $columnas, array $pks, array $declaradas): array
 {
-    $yaDeclarada = [];
-    foreach ($declaradas as $d) {
-        $yaDeclarada[$d['hijo'] . '.' . $d['col_hijo']] = true;
-    }
-    $tipoDe = function (string $t, string $c) use ($columnas) {
-        foreach ($columnas[$t] ?? [] as $x) {
-            if ($x['col'] === $c) {
-                return $x['tipo'];
-            }
-        }
-        return null;
-    };
-    $res = [];
-    foreach ($columnas as $hijo => $cols) {
-        foreach ($cols as $c) {
-            if (isset($yaDeclarada[$hijo . '.' . $c['col']])) {
-                continue;
-            }
-            foreach ($pks as $padre => $pk) {
-                if ($padre === $hijo || count($pk) !== 1 || $pk[0] !== $c['col']) {
-                    continue;
-                }
-                if (in_array($c['col'], $pks[$hijo] ?? [], true)) {
-                    continue;   // es parte de su propia llave primaria
-                }
-                if ($tipoDe($padre, $pk[0]) !== $c['tipo']) {
-                    continue;
-                }
-                $res[] = ['hijo' => $hijo, 'col_hijo' => $c['col'],
-                          'padre' => $padre, 'col_padre' => $pk[0]];
-            }
-        }
-    }
-    return $res;
+    return rel_inferir($columnas, $pks, $declaradas);
 }
 
 /** SQL del conteo de huérfanos. Los 4 identificadores ya deben estar validados. */
