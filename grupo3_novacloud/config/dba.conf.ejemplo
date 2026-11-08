@@ -33,3 +33,8 @@ RUTA_LOGS='dba_logs'
 # Planes de referencia del Módulo 03 (antes de la mejora)
 RUTA_PLANES='dba_planes'
 ARCHIVO_LOG_RESPALDOS='dba_logs/respaldos.log'
+
+# --- Módulo 05 · Cartógrafo (opcional) -------------------------------
+# Filas estimadas (en la tabla hija o en la padre) por encima de las cuales NO se
+# cuentan huérfanos, para no cargar el servidor. Entre 1000 y 1000000; por defecto 200000.
+# CARTO_MAX_FILAS='200000'
