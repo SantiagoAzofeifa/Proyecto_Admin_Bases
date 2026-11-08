@@ -9,14 +9,14 @@ $modulos = [
     ['Módulo 02 · Respaldos', 'Generar respaldos comprimidos, listarlos y consultar la bitácora de ejecución.', 'Abrir Respaldos', 'respaldos.php', true],
     ['Módulo 03 · Diagnóstico de consultas', 'Planes de ejecución (EXPLAIN) de Q01 y Q02, interpretación y comparación antes/después de una mejora.', 'Abrir Diagnóstico', 'diagnostico.php', true],
     ['Módulo 04    Mantenimiento', 'Panel de tablas, actualización de estadisticas de una tabla (ANALYZE TABLE) y bitácora de mantenimiento', 'Abrir Mantenimiento', 'mantenimiento.php', true],
-    ['Módulo 05', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=5', false],
-    ['Módulo 06', 'Módulo disponible próximamente.', 'Ver detalle', 'proximamente.php?p=6', false],
+    ['Módulo 05 · Cartógrafo de relaciones', 'Mapa de las relaciones entre tablas (declaradas e inferidas), con conteo de filas huérfanas.', 'Abrir Cartógrafo', 'cartografo.php', true],
+    ['Módulo 06 · Laboratorio de índices', 'Ensayo de un índice candidato sobre una copia temporal de la tabla, con EXPLAIN antes y después.', 'Abrir Laboratorio', 'laboratorio.php', true],
 ];
 
 render_header('Inicio', 'inicio');
 ?>
 <h2>Bienvenido a la Consola DBA</h2>
-<p>Seleccione un módulo de administración. Los módulos 04 a 06 se habilitarán en las próximas semanas.</p>
+<p>Seleccione un módulo de administración. Los seis módulos de la Consola DBA están habilitados.</p>
 
 <div class="grid">
 <?php foreach ($modulos as [$titulo, $desc, $boton, $enlace, $habilitado]): ?>
