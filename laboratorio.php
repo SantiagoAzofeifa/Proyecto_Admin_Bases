@@ -7,6 +7,8 @@ require __DIR__ . '/includes/diag_catalogo.php';
 require __DIR__ . '/includes/diag_lib.php';
 require __DIR__ . '/includes/lab_catalogo.php';
 require __DIR__ . '/includes/lab_ensayo.php';
+require __DIR__ . '/includes/respaldos_lib.php';   // respaldo previo (Módulo 02)
+require __DIR__ . '/includes/lab_control.php';      // bloqueo, respaldo previo, limpieza y bitácora (Gabriel)
 requerir_login();
 date_default_timezone_set('America/Costa_Rica');
 
@@ -16,6 +18,8 @@ $catalogo = lab_catalogo();
 // POST -> Redirect -> GET. Única acción permitida: 'ensayar' un candidato de la
 // lista cerrada. Exige token CSRF y el caso y el candidato se validan contra
 // lab_catalogo() antes de tocar el motor; nada de lo enviado llega al SQL.
+// lab_solicitar() rechaza (y registra) lo que no esté en la lista, y para lo válido
+// hace: límite de filas, bloqueo, respaldo previo, ensayo, limpieza y bitácora.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $casoId = is_string($_POST['caso'] ?? null) ? $_POST['caso'] : '';
     $candId = is_string($_POST['candidato'] ?? null) ? $_POST['candidato'] : '';
@@ -23,16 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['flash'] = ['error', 'Solicitud no válida. Intente de nuevo.'];
     } elseif (($_POST['accion'] ?? '') !== 'ensayar') {
         $_SESSION['flash'] = ['error', 'Acción no permitida.'];
-    } elseif (lab_resolver($casoId, $candId) === null) {
-        $_SESSION['flash'] = ['error', 'Caso o candidato fuera de la lista permitida: no se ejecutó nada.'];
     } else {
         try {
             $pdo = conectar_bd();
-            // Cuando Gabriel entregue lab_solicitar() (bloqueo + respaldo previo + bitácora),
-            // se usa esa función; mientras tanto se llama directo al ensayo de Santiago.
-            $_SESSION['lab_resultado'] = function_exists('lab_solicitar')
-                ? lab_solicitar($pdo, $cfg, $casoId, $candId)
-                : lab_ensayar($pdo, $cfg, $casoId, $candId);
+            $_SESSION['lab_resultado'] = lab_solicitar($pdo, $cfg, $casoId, $candId);
         } catch (PDOException $ex) {
             $_SESSION['flash'] = ['error', 'No se pudo conectar a la base de datos.'];
         }
@@ -47,7 +45,7 @@ $resultado = $_SESSION['lab_resultado'] ?? null;   // se conserva hasta el sigui
 // Caso elegido (pestañas) y candidato pendiente de confirmar.
 $casoId = is_string($_GET['caso'] ?? null) ? $_GET['caso'] : array_key_first($catalogo);
 if (!isset($catalogo[$casoId])) {
-    $flash  = ['error', 'Caso no permitido. Elija uno de los casos del laboratorio.'];
+    $flash  = ['error', 'ERROR: caso no permitido. Elija uno de los casos del laboratorio.'];
     $casoId = array_key_first($catalogo);
 }
 $caso      = $catalogo[$casoId] + ['id' => $casoId];
@@ -62,11 +60,15 @@ try {
     if (isset($_GET['candidato'])) {
         $res = lab_resolver($casoId, is_string($_GET['candidato']) ? $_GET['candidato'] : '');
         if ($res === null) {
-            $flash = ['error', 'Candidato fuera de la lista permitida.'];
+            $flash = ['error', 'ERROR: candidato fuera de la lista permitida.'];
+            lab_registrar_rechazo($cfg, $con['base'], $casoId, is_string($_GET['candidato']) ? $_GET['candidato'] : '(no texto)', 'Candidato fuera de la lista permitida');
         } else {
             [$c, $k] = $res;
             [$dentro, $filas, $motivo] = lab_verificar_limite($pdo, $cfg, $c);
             $confirmar = ['caso' => $c, 'cand' => $k, 'filas' => $filas, 'dentro' => $dentro, 'motivo' => $motivo];
+            if (!$dentro) {
+                lab_registrar_rechazo($cfg, $con['base'], $casoId, $k['id'], $motivo);
+            }
         }
     }
 } catch (PDOException $ex) {
@@ -153,13 +155,14 @@ render_header('Laboratorio de índices', 'laboratorio');
 <?php else: ?>
     <p>Se ejecutará, en este orden:</p>
     <ol class="lab-pasos">
+        <li>Generar un <strong>respaldo previo</strong> de la base (Módulo 02). Si falla, el ensayo no se ejecuta.</li>
         <li>Crear la copia <code><?= e(lab_nombre_copia($confirmar['caso']['tabla'])) ?></code> con la misma estructura y hasta <?= e(monitor_num(lab_max_filas($cfg))) ?> filas de la tabla original.</li>
         <li>Mostrar el plan <code>EXPLAIN</code> de la consulta <strong>antes</strong> del índice.</li>
         <li>Crear el índice solo en la copia: <code><?= e(lab_sql_crear_indice($confirmar['caso'], $confirmar['cand'])) ?></code></li>
         <li>Mostrar el plan <strong>después</strong> y compararlos.</li>
         <li>Eliminar la copia (siempre, aunque el ensayo falle).</li>
     </ol>
-    <p>La tabla <code><?= e($confirmar['caso']['tabla']) ?></code> no se modifica. Se recomienda generar antes un respaldo en el Módulo 02.</p>
+    <p>La tabla <code><?= e($confirmar['caso']['tabla']) ?></code> no se modifica. Solo se ejecuta un ensayo a la vez; el respaldo puede tardar unos segundos.</p>
     <form method="post">
         <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="accion" value="ensayar">
@@ -186,6 +189,7 @@ render_header('Laboratorio de índices', 'laboratorio');
         <tr><th>Caso · candidato</th><td><?= e((string) $resultado['caso']) ?> · <?= e((string) $resultado['candidato']) ?><?= isset($resultado['indice']) ? ' (' . e($resultado['indice']) . ')' : '' ?></td></tr>
         <tr><th>Base de datos</th><td><?= e($con['base']) ?> (servidor <?= e($con['version']) ?>)</td></tr>
         <tr><th>Tabla original</th><td><?= e((string) ($resultado['tabla'] ?? '—')) ?><?= isset($resultado['filas_origen']) ? ' · ' . e(monitor_num((int) $resultado['filas_origen'])) . ' filas' : '' ?></td></tr>
+        <tr><th>Respaldo previo</th><td><?= !empty($resultado['respaldo']) ? e($resultado['respaldo']) : 'No se generó' ?></td></tr>
         <tr><th>Copia</th><td><?= isset($resultado['copia']) ? e($resultado['copia']) . ' · ' . e(monitor_num((int) $resultado['filas_copia'])) . ' filas copiadas' : '—' ?></td></tr>
         <tr><th>Índices heredados quitados de la copia</th><td><?= !empty($resultado['indices_quitados']) ? e(implode(', ', $resultado['indices_quitados'])) : 'ninguno' ?></td></tr>
         <tr><th>Índice creado (solo en la copia)</th><td><code><?= e((string) ($resultado['sql_indice'] ?? '—')) ?></code></td></tr>
@@ -231,4 +235,26 @@ render_header('Laboratorio de índices', 'laboratorio');
 <p class="nota-plan">Las filas de <code>rows</code> son estimaciones del optimizador sobre las estadísticas de la copia; no son tiempo ni filas devueltas.</p>
 <?php endif; ?>
 <?php endif; ?>
+
+<?php $ultimos = lab_bitacora($cfg, 10); ?>
+<h3 class="seccion-titulo">Bitácora (últimos 10 ensayos)</h3>
+<div class="tabla-wrap">
+<table class="tabla">
+    <thead><tr><th>Fecha/hora</th><th>Tabla</th><th>Acción</th><th>Resultado</th><th>Detalle</th></tr></thead>
+    <tbody>
+    <?php if (!$ultimos): ?>
+        <tr><td colspan="5">La bitácora está vacía.</td></tr>
+    <?php endif; ?>
+    <?php foreach ($ultimos as $b): ?>
+        <tr>
+            <td><?= e($b['fecha']) ?></td>
+            <td><?= e($b['tabla']) ?></td>
+            <td><?= e($b['accion']) ?></td>
+            <td class="<?= $b['resultado'] === 'OK' ? 'est-ok' : 'est-error' ?>"><?= e($b['resultado']) ?></td>
+            <td><?= e($b['detalle']) ?></td>
+        </tr>
+    <?php endforeach; ?>
+    </tbody>
+</table>
+</div>
 <?php render_footer();
