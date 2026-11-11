@@ -39,7 +39,7 @@ try {
 
 render_header('Monitor', 'monitor');
 ?>
-<h2>Módulo 01 · Monitor de Base de Datos</h2>
+<?php titulo_modulo('01', 'Monitor de base de datos'); ?>
 <p>Espacio y contenido de <strong><?= e((string) $cfg['DB_NAME']) ?></strong>, consultados en vivo desde <code>information_schema</code>.</p>
 
 <?php if ($flash): ?>

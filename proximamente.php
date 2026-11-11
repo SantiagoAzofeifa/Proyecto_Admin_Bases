@@ -8,7 +8,7 @@ $p = filter_input(INPUT_GET, 'p', FILTER_VALIDATE_INT, ['options' => ['min_range
 
 render_header("Módulo 0$p", "p$p");
 ?>
-<h2>Módulo 0<?= $p ?></h2>
+<?php titulo_modulo('0' . $p, 'Próximamente'); ?>
 <div class="tarjeta">
     <h3>Módulo disponible próximamente</h3>
     <p>Este espacio está reservado para una herramienta que se incorporará a la Consola DBA en las siguientes semanas.</p>

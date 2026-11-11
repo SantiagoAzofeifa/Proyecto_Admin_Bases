@@ -28,7 +28,7 @@ $espacio   = array_sum(array_column($respaldos, 'bytes'));
 
 render_header('Respaldos', 'respaldos');
 ?>
-<h2>Módulo 02 · Respaldos</h2>
+<?php titulo_modulo('02', 'Respaldos'); ?>
 <p>Genere respaldos comprimidos de <strong><?= e((string) $cfg['DB_NAME']) ?></strong> y consulte la bitácora de ejecución.</p>
 
 <?php if ($flash): ?>

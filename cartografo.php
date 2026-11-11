@@ -37,9 +37,15 @@ try {
     }
 
     $mapa     = carto_analizar($pdo, null);          // el mapa siempre muestra el conjunto completo
+    // Se conservan los índices de $mapa['relaciones']: el tablero interactivo los usa como identificador.
     $relVista = $foco === null ? $mapa['relaciones']
-              : array_values(array_filter($mapa['relaciones'], fn($r) => $r['hijo'] === $foco || $r['padre'] === $foco));
-    [$svg, $fuera] = carto_svg($todasTablas, $mapa['relaciones'], $foco);
+              : array_filter($mapa['relaciones'], fn($r) => $r['hijo'] === $foco || $r['padre'] === $foco);
+    [$svg, $fuera] = carto_svg($todasTablas, $mapa['relaciones'], $foco);   // respaldo sin JavaScript
+
+    // Datos del tablero interactivo (js/cartografo.js): columnas, llaves y filas estimadas
+    // de cada tabla propia, y cada relación con la consulta que cuenta sus huérfanos.
+    $columnas = cat_columnas($pdo);
+    $filasEst = carto_filas_estimadas($pdo);
 
     $bitacora_ok = cartografo_registrar($cfg, [
         'inicio'     => $inicio,
@@ -63,10 +69,39 @@ try {
 
 $nd = '<span class="no-disp">No disponible</span>';
 
+// Datos del tablero en JSON. Las banderas JSON_HEX_* convierten <, >, & y comillas
+// en secuencias \uXXXX: ningún nombre de tabla puede cerrar la etiqueta <script>.
+$datosTablero = null;
+if ($error === null && $todasTablas) {
+    $nDecl = count(array_filter($mapa['relaciones'], fn($r) => $r['origen'] === 'declarada'));
+    $tablasJs = [];
+    foreach ($todasTablas as $t) {
+        $tablasJs[] = [
+            'nombre'   => $t,
+            'filas'    => $filasEst[$t] ?? null,
+            'columnas' => array_map(fn($c) => ['n' => $c['col'], 't' => $c['completo'], 'k' => $c['llave']], $columnas[$t] ?? []),
+        ];
+    }
+    $relsJs = [];
+    foreach ($mapa['relaciones'] as $i => $r) {
+        $relsJs[] = [
+            'id' => $i, 'hijo' => $r['hijo'], 'colHijo' => $r['col_hijo'], 'padre' => $r['padre'], 'colPadre' => $r['col_padre'],
+            'origen' => $r['origen'], 'regla' => $r['regla'] ?? '', 'confianza' => $r['confianza'],
+            'huerfanos' => $r['huerfanos'], 'estado' => $r['estado'], 'motivo' => $r['motivo'],
+            'muestra' => array_map('strval', $r['muestra']),
+            'sql' => cat_sql_huerfanos($r['hijo'], $r['col_hijo'], $r['padre'], $r['col_padre']),
+        ];
+    }
+    $datosTablero = json_encode(
+        ['base' => $con['base'], 'foco' => $foco, 'tablas' => $tablasJs, 'relaciones' => $relsJs],
+        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+    );
+}
+
 render_header('Cartógrafo de relaciones', 'cartografo');
 ?>
-<h2>Módulo 05 · Cartógrafo de relaciones</h2>
-<p>Mapa de las relaciones entre las tablas de la base: las declaradas con <code>FOREIGN KEY</code> y las que se infieren por nombre y tipo de columna. Es una consulta de solo lectura sobre <code>information_schema</code>.</p>
+<?php titulo_modulo('05', 'Cartógrafo de relaciones'); ?>
+<p>Cómo se relacionan las tablas de la base: las relaciones declaradas con <code>FOREIGN KEY</code> y las que se deducen por nombre y tipo de columna, cada una comprobada contando sus filas huérfanas. Solo lee <code>information_schema</code> y las tablas propias.</p>
 
 <?php if ($error !== null): ?>
     <div class="aviso aviso-error"><?= e($error) ?></div>
@@ -83,59 +118,93 @@ render_header('Cartógrafo de relaciones', 'cartografo');
 <?php endif; ?>
 
 <div class="resumen">
-    <div class="dato"><strong><?= e((string) $cfg['DB_MOTOR']) ?></strong>motor · servidor <?= e($con['version']) ?></div>
-    <div class="dato"><strong><?= e($con['base']) ?></strong>base de datos</div>
-    <div class="dato"><strong><?= e($con['usuario']) ?></strong>usuario conectado</div>
+    <div class="dato"><strong><?= e((string) $cfg['DB_MOTOR']) ?></strong>servidor <?= e($con['version']) ?></div>
+    <div class="dato"><strong class="ident"><?= e($con['base']) ?></strong>base de datos</div>
+    <div class="dato"><strong class="ident"><?= e($con['usuario']) ?></strong>usuario conectado</div>
     <div class="dato"><strong><?= count($todasTablas) ?></strong>tablas propias</div>
-    <div class="dato"><strong><?= count($mapa['relaciones']) ?></strong>relaciones encontradas</div>
-    <div class="dato"><strong class="<?= $mapa['total_huerfanos'] > 0 ? 'est-error' : '' ?>"><?= e(monitor_num($mapa['total_huerfanos'])) ?></strong>filas huérfanas</div>
+    <div class="dato"><strong><?= count($mapa['relaciones']) ?></strong><?= $nDecl ?? 0 ?> declaradas y <?= count($mapa['relaciones']) - ($nDecl ?? 0) ?> inferidas</div>
+    <div class="dato"><strong class="<?= $mapa['total_huerfanos'] > 0 ? 'est-error' : 'est-ok' ?>"><?= e(monitor_num($mapa['total_huerfanos'])) ?></strong>filas huérfanas</div>
 </div>
 
 <?php if (!$todasTablas): ?>
     <div class="aviso aviso-error">La base no tiene tablas propias: no hay relaciones que mostrar.</div>
 <?php render_footer(); exit; endif; ?>
 
+<section class="tablero" id="tablero" aria-label="Mapa de relaciones">
+    <div class="tablero-barra">
+        <label class="tablero-buscar">
+            <span class="sr">Buscar una tabla en el mapa</span>
+            <input type="search" id="tablero-buscar" placeholder="Buscar tabla" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="tablero-filtros" role="group" aria-label="Qué relaciones mostrar">
+            <button type="button" class="chip" data-filtro="decl" aria-pressed="true"><span class="chip-muestra chip-decl" aria-hidden="true"></span>Declaradas</button>
+            <button type="button" class="chip" data-filtro="inf" aria-pressed="true"><span class="chip-muestra chip-inf" aria-hidden="true"></span>Inferidas</button>
+            <button type="button" class="chip" data-filtro="huer" aria-pressed="false"><span class="chip-muestra chip-huer" aria-hidden="true"></span>Solo con huérfanos</button>
+        </div>
+        <div class="tablero-vista" role="group" aria-label="Vista del mapa">
+            <button type="button" class="ico" data-accion="alejar" title="Alejar" aria-label="Alejar">&minus;</button>
+            <button type="button" class="ico" data-accion="acercar" title="Acercar" aria-label="Acercar">+</button>
+            <button type="button" class="txt" data-accion="encuadrar">Encuadrar</button>
+            <button type="button" class="txt" data-accion="reordenar" title="Volver a la disposición automática">Reordenar</button>
+            <button type="button" class="txt" data-accion="completa">Pantalla completa</button>
+        </div>
+    </div>
+    <div class="tablero-cuerpo">
+        <div class="tablero-lienzo" id="tablero-lienzo">
+            <!-- Respaldo sin JavaScript: el mapa generado en el servidor. -->
+            <div class="mapa-wrap"><?= $svg /* generado por carto_svg(): todo texto ya pasó por e() */ ?></div>
+            <p class="tablero-ayuda">Arrastra las tablas para ordenarlas y el fondo para moverte. Ctrl + rueda acerca o aleja.</p>
+        </div>
+        <aside class="tablero-panel" id="tablero-panel" aria-live="polite">
+            <h3>Explora el mapa</h3>
+            <p>Pasa el cursor sobre una tabla para ver con quién se relaciona. Haz clic en una tabla o en una línea para ver su detalle y la consulta que comprueba la relación.</p>
+        </aside>
+    </div>
+    <ul class="tablero-leyenda">
+        <li><span class="lg lg-decl"></span>Declarada con FOREIGN KEY</li>
+        <li><span class="lg lg-inf"></span><span class="estrella" aria-hidden="true"></span>Inferida por nombre y tipo</li>
+        <li><span class="lg lg-huer"></span>Tiene filas huérfanas</li>
+        <li><span class="llave llave-pk">PK</span> llave primaria <span class="llave llave-fk">FK</span> columna que apunta a otra tabla</li>
+        <li>La flecha va de la tabla hija a la tabla padre</li>
+    </ul>
+    <?php if ($datosTablero !== null): ?>
+    <script type="application/json" id="carto-datos"><?= $datosTablero ?></script>
+    <?php endif; ?>
+</section>
+<script src="js/cartografo.js" defer></script>
+<?php if ($fuera > 0): ?>
+    <p class="vacio">Sin JavaScript el mapa dibuja como máximo <?= CARTO_MAX_TABLAS ?> tablas; <?= $fuera ?> no se dibujaron, pero sí aparecen en la tabla de abajo.</p>
+<?php endif; ?>
+
 <form method="get" class="barra-filtro">
-    <label for="tabla">Resaltar una tabla</label>
+    <label for="tabla">Analizar solo una tabla</label>
     <select name="tabla" id="tabla">
         <option value="">Todas las tablas</option>
         <?php foreach ($todasTablas as $t): ?>
             <option value="<?= e($t) ?>"<?= $t === $foco ? ' selected' : '' ?>><?= e($t) ?></option>
         <?php endforeach; ?>
     </select>
-    <button type="submit" class="btn-accion">Ver</button>
-    <?php if ($foco !== null): ?><a class="btn-secundario" href="cartografo.php">Quitar filtro</a><?php endif; ?>
+    <button type="submit" class="btn-accion">Analizar</button>
+    <?php if ($foco !== null): ?><a class="btn-secundario" href="cartografo.php">Ver todas</a><?php endif; ?>
 </form>
-
-<h3 class="seccion-titulo">Mapa de relaciones</h3>
-<div class="mapa-wrap"><?= $svg /* generado por carto_svg(): todo texto ya pasó por e() */ ?></div>
-<ul class="leyenda-mapa">
-    <li><span class="lg lg-decl"></span> Declarada (FOREIGN KEY)</li>
-    <li><span class="lg lg-inf"></span> Inferida por nombre y tipo</li>
-    <li><span class="lg lg-huer"></span> Con filas huérfanas</li>
-    <li>La flecha va de la tabla hija a la tabla padre.</li>
-</ul>
-<?php if ($fuera > 0): ?>
-    <div class="aviso aviso-error">El mapa dibuja como máximo <?= CARTO_MAX_TABLAS ?> tablas; <?= $fuera ?> no se dibujaron, pero sí aparecen en la tabla de abajo.</div>
-<?php endif; ?>
 
 <h3 class="seccion-titulo">Relaciones<?= $foco !== null ? ' de ' . e($foco) : '' ?></h3>
 <?php if (!$relVista): ?>
     <p class="vacio">No se encontraron relaciones<?= $foco !== null ? ' para esta tabla' : '' ?>.</p>
 <?php else: ?>
 <div class="tabla-wrap">
-<table class="tabla">
+<table class="tabla tabla-rel">
     <thead><tr>
         <th>Tabla hija</th><th>Columna</th><th>Tabla padre</th><th>Columna</th>
-        <th>Origen</th><th>Confianza</th><th class="num">Huérfanos</th><th>Estado</th><th>Detalle</th>
+        <th>Origen</th><th>Confianza</th><th class="num">Huérfanos</th><th>Estado</th><th>Detalle</th><th><span class="sr">Mapa</span></th>
     </tr></thead>
     <tbody>
-    <?php foreach ($relVista as $r): ?>
-        <tr>
-            <td><?= e($r['hijo']) ?></td>
-            <td><?= e($r['col_hijo']) ?></td>
-            <td><?= e($r['padre']) ?></td>
-            <td><?= e($r['col_padre']) ?></td>
+    <?php foreach ($relVista as $i => $r): ?>
+        <tr data-rel="<?= (int) $i ?>">
+            <td class="ident"><?= e($r['hijo']) ?></td>
+            <td class="ident"><?= e($r['col_hijo']) ?></td>
+            <td class="ident"><?= e($r['padre']) ?></td>
+            <td class="ident"><?= e($r['col_padre']) ?></td>
             <td><?= e($r['origen']) ?></td>
             <td><?= $r['confianza'] !== '' ? e($r['confianza']) : '—' ?></td>
             <td class="num <?= ($r['huerfanos'] ?? 0) > 0 ? 'est-error' : '' ?>">
@@ -147,6 +216,7 @@ render_header('Cartógrafo de relaciones', 'cartografo');
                     <br><strong>Valores sin padre (muestra):</strong> <?= e(implode(', ', array_map('strval', $r['muestra']))) ?>
                 <?php endif; ?>
             </td>
+            <td><button type="button" class="btn-tabla ver-rel" data-rel="<?= (int) $i ?>" hidden>Ver en el mapa</button></td>
         </tr>
     <?php endforeach; ?>
     </tbody>

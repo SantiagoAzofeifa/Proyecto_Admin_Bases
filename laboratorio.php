@@ -100,7 +100,7 @@ function lab_tabla_html(array $filas): void
 
 render_header('Laboratorio de índices', 'laboratorio');
 ?>
-<h2>Módulo 06 · Laboratorio de índices</h2>
+<?php titulo_modulo('06', 'Laboratorio de índices'); ?>
 <p>Prueba un índice candidato sobre una <strong>copia temporal</strong> de la tabla (<code>sbx_…</code>) y compara el plan <code>EXPLAIN</code> antes y después. La tabla real nunca se modifica y la copia se elimina al terminar.</p>
 
 <?php if ($flash): ?>

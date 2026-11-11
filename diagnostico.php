@@ -98,7 +98,7 @@ function diag_tabla_html(array $filas): void
 
 render_header('Diagnóstico', 'diagnostico');
 ?>
-<h2>Módulo 03 · Diagnóstico de consultas</h2>
+<?php titulo_modulo('03', 'Diagnóstico de consultas'); ?>
 <p>Plan de ejecución (<code>EXPLAIN</code>) de las consultas del catálogo, obtenido en vivo desde la base de la cuenta.</p>
 
 <?php if ($flash): ?>

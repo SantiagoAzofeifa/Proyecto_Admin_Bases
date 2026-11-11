@@ -57,7 +57,7 @@ $nd = '<span class="no-disp">No disponible</span>';
 
 render_header('Mantenimiento', 'mantenimiento');
 ?>
-<h2>Módulo 04 · Mantenimiento básico</h2>
+<?php titulo_modulo('04', 'Mantenimiento básico'); ?>
 <p>Estadísticas de las tablas propias y actualización de una tabla seleccionada con <code>ANALYZE TABLE</code>.</p>
 
 <?php if ($flash): ?>
